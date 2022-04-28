@@ -16,7 +16,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.google.firebase.iid.FirebaseInstanceId
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.messaging.FirebaseMessaging
 import me.leolin.shortcutbadger.ShortcutBadger
 import org.apache.cordova.*
@@ -462,17 +462,9 @@ class PushPlugin : CordovaPlugin() {
         Log.v(TAG, formatLogMessage("senderID=$senderID"))
 
         try {
-          token = FirebaseInstanceId.getInstance().token
+          token = Tasks.await(FirebaseMessaging.getInstance().token)
         } catch (e: IllegalStateException) {
           Log.e(TAG, formatLogMessage("Firebase Token Exception ${e.message}"))
-        }
-
-        if (token == null) {
-          try {
-            token = FirebaseInstanceId.getInstance().getToken(senderID, PushConstants.FCM)
-          } catch (e: IllegalStateException) {
-            Log.e(TAG, formatLogMessage("Firebase Token Exception ${e.message}"))
-          }
         }
 
         if (token != "") {
@@ -612,7 +604,7 @@ class PushPlugin : CordovaPlugin() {
         if (topics != null) {
           unsubscribeFromTopics(topics)
         } else {
-          FirebaseInstanceId.getInstance().deleteInstanceId()
+          Tasks.await(FirebaseMessaging.getInstance().deleteToken())
           Log.v(TAG, formatLogMessage("UNREGISTER"))
 
           /**
