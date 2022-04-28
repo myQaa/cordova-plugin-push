@@ -22,7 +22,6 @@ import com.adobe.phonegap.push.PushPlugin.Companion.isActive
 import com.adobe.phonegap.push.PushPlugin.Companion.isInForeground
 import com.adobe.phonegap.push.PushPlugin.Companion.sendExtras
 import com.adobe.phonegap.push.PushPlugin.Companion.setApplicationIconBadgeNumber
-import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import org.json.JSONArray
@@ -70,15 +69,10 @@ class FCMService : FirebaseMessagingService() {
    */
   override fun onNewToken(token: String) {
     super.onNewToken(token)
-    FirebaseInstanceId.getInstance().instanceId
-      .addOnSuccessListener { instanceIdResult ->
-        // Get updated InstanceID token.
-        val refreshedToken = instanceIdResult.token
-        Log.d(TAG, "Refreshed token: $refreshedToken")
+    Log.d(TAG, "Refreshed token: $token")
 
-        // TODO: Implement this method to send any registration to your app's servers.
-        //sendRegistrationToServer(refreshedToken);
-      }
+    // TODO: Implement this method to send any registration to your app's servers.
+    //sendRegistrationToServer(token);
   }
 
   /**
