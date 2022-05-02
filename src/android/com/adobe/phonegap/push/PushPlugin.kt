@@ -25,6 +25,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.ExecutionException
 
 /**
  * Cordova Plugin Push
@@ -442,7 +443,6 @@ class PushPlugin : CordovaPlugin() {
         Context.MODE_PRIVATE
       )
       var jo: JSONObject? = null
-      var token: String? = null
       var senderID: String? = null
 
       try {
@@ -461,10 +461,21 @@ class PushPlugin : CordovaPlugin() {
         Log.v(TAG, formatLogMessage("JSONObject=$jo"))
         Log.v(TAG, formatLogMessage("senderID=$senderID"))
 
-        try {
-          token = Tasks.await(FirebaseMessaging.getInstance().token)
+        val token = try {
+          try {
+            Tasks.await(FirebaseMessaging.getInstance().token)
+          } catch (e: ExecutionException) {
+            throw e.cause ?: e
+          }
         } catch (e: IllegalStateException) {
           Log.e(TAG, formatLogMessage("Firebase Token Exception ${e.message}"))
+          null
+        } catch (e: ExecutionException) {
+          Log.e(TAG, formatLogMessage("Firebase Token Exception ${e.message}"))
+          null
+        } catch (e: InterruptedException) {
+          Log.e(TAG, formatLogMessage("Firebase Token Exception ${e.message}"))
+          null
         }
 
         if (token != "") {
@@ -604,7 +615,11 @@ class PushPlugin : CordovaPlugin() {
         if (topics != null) {
           unsubscribeFromTopics(topics)
         } else {
-          Tasks.await(FirebaseMessaging.getInstance().deleteToken())
+          try {
+            Tasks.await(FirebaseMessaging.getInstance().deleteToken())
+          } catch (e: ExecutionException) {
+            throw e.cause ?: e
+          }
           Log.v(TAG, formatLogMessage("UNREGISTER"))
 
           /**
@@ -631,6 +646,9 @@ class PushPlugin : CordovaPlugin() {
         callbackContext.success()
       } catch (e: IOException) {
         Log.e(TAG, formatLogMessage("IO Exception ${e.message}"))
+        callbackContext.error(e.message)
+      } catch (e: InterruptedException) {
+        Log.e(TAG, formatLogMessage("Interrupted ${e.message}"))
         callbackContext.error(e.message)
       }
     }
